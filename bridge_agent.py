@@ -1,6 +1,7 @@
 import os
 import requests
 import json
+import time
 
 # Krever GITHUB_TOKEN som env
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
@@ -31,4 +32,10 @@ def commit_file(filename, content, commit_msg):
     print("Respons:", response.json())
 
 if __name__ == "__main__":
-    print("Bridge-agent klar (placeholder)")
+    print("Bridge-agent startet og holder seg aktiv 🟢")
+
+    while True:
+        # Her kan du senere legge til at agenten overvåker, pusher filer, etc.
+        print("Agenten er aktiv og venter på nye oppgaver...")
+        time.sleep(60)
+

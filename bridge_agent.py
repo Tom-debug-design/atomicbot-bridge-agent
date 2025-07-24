@@ -2,40 +2,46 @@ import os
 import requests
 import json
 import time
+from datetime import datetime
+import base64
 
-# Krever GITHUB_TOKEN som env
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+GITHUB_TOKEN = os.getenv("AGENT_TOKEN")
 REPO = "Tom-debug-design/atomicbot-agent"
 BRANCH = "main"
+FILE_NAME = "heartbeat.txt"
 
-def commit_file(filename, content, commit_msg):
+def commit_file(filename, content, message):
     url = f"https://api.github.com/repos/{REPO}/contents/{filename}"
+
     headers = {
         "Authorization": f"token {GITHUB_TOKEN}",
         "Accept": "application/vnd.github.v3+json"
     }
 
-    # Hent SHA for eksisterende fil
-    get = requests.get(url, headers=headers)
-    sha = get.json().get("sha") if get.status_code == 200 else None
+    get_resp = requests.get(url, headers=headers)
+    if get_resp.status_code == 200:
+        sha = get_resp.json()["sha"]
+    else:
+        sha = None
 
     payload = {
-        "message": commit_msg,
-        "content": content.encode("utf-8").decode("utf-8"),
+        "message": message,
+        "content": base64.b64encode(content.encode()).decode(),
         "branch": BRANCH
     }
+
     if sha:
         payload["sha"] = sha
 
-    response = requests.put(url, headers=headers, data=json.dumps(payload))
-    print("Status:", response.status_code)
-    print("Respons:", response.json())
+    resp = requests.put(url, headers=headers, data=json.dumps(payload))
+    print(f"Commit status: {resp.status_code} - {resp.text}")
 
 if __name__ == "__main__":
     print("Bridge-agent startet og holder seg aktiv 🟢")
 
     while True:
-        # Her kan du senere legge til at agenten overvåker, pusher filer, etc.
-        print("Agenten er aktiv og venter på nye oppgaver...")
+        timestamp = datetime.utcnow().isoformat()
+        content = f"Bridge heartbeat: {timestamp}Z"
+        commit_file(FILE_NAME, content, f"Auto heartbeat commit {timestamp}")
+        print("✅ Heartbeat pushed to GitHub.")
         time.sleep(60)
-

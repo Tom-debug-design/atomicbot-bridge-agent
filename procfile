@@ -1,1 +1,2 @@
-start: python3 bridge_agent.py
+python3 bridge_agent.py
+
